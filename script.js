@@ -1,22 +1,29 @@
-// script.js (UPDATED for Streaming)
+// script.js (FIXED & CLEANED with Typewriter Effect)
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ... (All variable declarations remain the same) ...
+    // --- Utility Function for Delay ---
+    // A simple promise-based delay function for the typewriter effect
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const TYPE_DELAY_MS = 25; // Speed for the typewriter effect (25ms per character)
+
+    // --- Variable Declarations ---
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
     const chatOutput = document.getElementById('chat-output');
     const chatHistoryList = document.getElementById('chat-history');
     const newChatBtn = document.querySelector('.new-chat-btn');
+    const removeAllChatsBtn = document.getElementById('remove-all-chats-btn'); 
 
     let currentSessionId = null;
     let chatData = {}; 
+    let currentBotMessageElement = null; // Used for streaming
+
+
+    // --- Core Functions (Non-modified helper functions omitted for brevity) ---
+    // ... loadChatsFromStorage, saveChatsToStorage, addMessage, saveMessageToSession, 
+    // ... renderChat, createHistoryItem, startNewChat, handleRemoveAllChats (remain the same) ...
     
-    // Global variable to store the element being streamed to
-    let currentBotMessageElement = null;
-
-    // --- LocalStorage Functions (Remain the same) ---
-
-    // ... (loadChatsFromStorage, saveChatsToStorage, addMessage, saveMessageToSession, renderChat, createHistoryItem, startAIBrainSession remain the same) ...
+    // The previous implementation of these functions is assumed to be included here.
 
     function loadChatsFromStorage() {
         const storedData = localStorage.getItem('chatApp_chatData');
@@ -38,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     const initialSessionId = storedSessionId && chatData[storedSessionId] ? storedSessionId : Object.keys(chatData)[0];
                     if (initialSessionId) {
-                        // The server-side context is reset, but we load the UI history
                         renderChat(initialSessionId);
                     }
                 }
@@ -70,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
         targetOutput.appendChild(messageDiv);
         targetOutput.scrollTop = targetOutput.scrollHeight;
         
-        // Return the <p> element for streaming if it's a bot message
         if (sender === 'bot' && text === '') {
             return p;
         }
@@ -124,12 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatHistoryList.prepend(li);
         return li;
     }
-    
-    // Placeholder to keep the function signatures consistent
-    const startAIBrainSession = (sessionId) => { /* No server call needed here for this version */ };
 
-
-    // 1. Start a New Chat Session (No change)
     const startNewChat = async () => {
         try {
             const response = await fetch('/api/new-session');
@@ -146,6 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const welcomeMessage = "Welcome! I'm ready for a new conversation. Ask me anything.";
             chatData[sessionId] = [{ text: welcomeMessage, sender: 'system' }];
             
+            document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
+
             createHistoryItem(sessionId, defaultTitle);
             renderChat(sessionId);
             saveChatsToStorage();
@@ -155,8 +157,28 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`Error starting new chat: ${error.message}.`);
         }
     };
+    
+    const handleRemoveAllChats = () => {
+        if (!confirm("Are you sure you want to remove all chat history? This cannot be undone.")) {
+            return;
+        }
 
-    // 2. Send Message Handler (UPDATED to handle streaming)
+        localStorage.removeItem('chatApp_chatData');
+        localStorage.removeItem('chatApp_currentSessionId');
+        
+        chatData = {};
+        currentSessionId = null;
+        
+        chatHistoryList.innerHTML = '';
+        chatOutput.innerHTML = '';
+        
+        console.log("All chat history removed.");
+        alert("All chat history has been cleared.");
+
+        startNewChat();
+    };
+    
+    // 2. Send Message Handler (Streaming Logic with Typewriter Effect)
     const sendMessage = async () => {
         const userText = userInput.value.trim();
 
@@ -164,11 +186,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Add User Message (saves to memory, but not yet to the permanent bot history)
+        // Add User Message (saves to UI and history)
         addMessage(userText, 'user');
         saveMessageToSession(currentSessionId, userText, 'user');
 
-        // Prepare Bot Message element (empty string)
+        // Prepare Bot Message element (empty string) for UI streaming
         currentBotMessageElement = addMessage('', 'bot');
         let fullBotResponse = '';
 
@@ -217,20 +239,22 @@ document.addEventListener('DOMContentLoaded', () => {
                             const data = JSON.parse(jsonStr);
                             
                             if (data.text) {
-                                // Append the new text chunk to the element
-                                currentBotMessageElement.textContent += data.text;
-                                fullBotResponse += data.text;
-                                // Auto-scroll to keep the latest text visible
-                                chatOutput.scrollTop = chatOutput.scrollHeight;
+                                // --- NEW Typewriter Logic ---
+                                for (const char of data.text) {
+                                    currentBotMessageElement.textContent += char;
+                                    fullBotResponse += char;
+                                    // Auto-scroll on new character
+                                    chatOutput.scrollTop = chatOutput.scrollHeight;
+                                    await delay(TYPE_DELAY_MS); // Pause for 25ms per character
+                                }
+                                // --- END NEW Logic ---
                             }
                         } catch (e) {
                             console.error('Error parsing SSE data:', e, line);
                         }
                     } else if (line.startsWith('event: done')) {
-                        // Stream finished, break the loop
                         break;
                     } else if (line.startsWith('event: error')) {
-                         // Handle server-side error event
                          const errorData = JSON.parse(line.substring(6));
                          currentBotMessageElement.textContent += `[ERROR: ${errorData.error}]`;
                          fullBotResponse = 'ERROR: ' + errorData.error;
@@ -239,18 +263,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // After streaming finishes, save the final, complete response to local history
             if (fullBotResponse) {
-                // Remove the initial user message, then add the user and complete bot message
-                // This ensures the local memory holds the full exchange.
-                chatData[currentSessionId].pop(); // Remove the user message placeholder
-                saveMessageToSession(currentSessionId, userText, 'user');
+                // Save the final, complete response to local history
                 saveMessageToSession(currentSessionId, fullBotResponse, 'bot');
             }
 
         } catch (error) {
             console.error('Error during streaming chat:', error);
-            // Display error in the chat window
             currentBotMessageElement.textContent = `🤖 Streaming failed: ${error.message}`;
         } finally {
             // Re-enable input
@@ -262,10 +281,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Initialization ---
+
+    // --- Initialization & Event Listeners ---
 
     newChatBtn.addEventListener('click', startNewChat);
     sendBtn.addEventListener('click', sendMessage);
+    removeAllChatsBtn.addEventListener('click', handleRemoveAllChats); 
+
     userInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
