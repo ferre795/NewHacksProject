@@ -1,10 +1,13 @@
 :root {
-    --dark-bg: #343541; /* Main background color */
-    --sidebar-bg: #202123; /* Sidebar darker background */
-    --text-color: #d1d5db; /* Light gray text */
-    --input-bg: #40414f; /* Input area background */
-    --active-item: #3e4049; /* Active chat item/hover background */
-    --send-btn-color: #6c80f4; /* Blue color for send button */
+    /* --- WHITE & RED THEME VARIABLES --- */
+    --light-bg: #FFFFFF;        /* Main background color (White) */
+    --sidebar-bg: #F9F9F9;      /* Sidebar lighter background */
+    --text-color-dark: #333333; /* Dark text for contrast */
+    --input-bg: #F0F0F0;        /* Input area lighter background */
+    --active-item-bg: #FFEBEB;  /* Very light red for active/hover */
+    --primary-color: #D32F2F;   /* Main Red color (e.g., Send button) */
+    --secondary-color: #EF9A9A; /* Lighter Red */
+    /* ----------------------------------- */
 }
 
 /* Reset and base styles */
@@ -16,11 +19,11 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--dark-bg);
-    color: var(--text-color);
+    background-color: var(--light-bg); /* Main background: White */
+    color: var(--text-color-dark); /* Main text color: Dark */
     display: flex;
     height: 100vh;
-    overflow: hidden; /* Hide main body scrollbar */
+    overflow: hidden;
 }
 
 /* Overall Layout */
@@ -29,16 +32,18 @@ body {
     width: 100%;
 }
 
-/* Left Sidebar (Transparent effect) */
+/* Left Sidebar */
 .sidebar {
     width: 260px;
-    background-color: rgba(32, 33, 35, 0.95); /* Sidebar BG with slight transparency */
+    /* Sidebar BG is nearly white, still slightly transparent */
+    background-color: rgba(249, 249, 249, 0.95);
     padding: 10px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid rgba(0, 0, 0, 0.2);
+    border-right: 1px solid #E0E0E0; /* Light gray border */
     overflow-y: auto;
     flex-shrink: 0;
+    color: var(--text-color-dark);
 }
 
 .sidebar-header {
@@ -49,17 +54,31 @@ body {
     width: 100%;
     padding: 10px;
     background-color: transparent;
-    border: 1px solid var(--text-color);
-    color: var(--text-color);
+    border: 1px solid var(--primary-color); /* Red border */
+    color: var(--primary-color); /* Red text */
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.2s;
+    
+    /* MODIFIED: Flexbox for centering */
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center;
 }
 
 .new-chat-btn:hover {
-    background-color: var(--active-item);
+    background-color: var(--active-item-bg); /* Light red on hover */
 }
+
+/* MODIFIED: Styling for the parts of the button */
+.plus-sign {
+    margin-right: 8px; /* Space between '+' and 'New Chat' */
+}
+.chat-text {
+    /* The 'New Chat' text is now centered relative to the button width */
+}
+
 
 .history-list {
     list-style: none;
@@ -76,14 +95,16 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     transition: background-color 0.2s;
+    color: var(--text-color-dark);
 }
 
 .history-item:hover {
-    background-color: var(--active-item);
+    background-color: var(--active-item-bg);
 }
 
 .history-item.active {
-    background-color: var(--active-item);
+    background-color: var(--secondary-color); /* Lighter red for active */
+    color: var(--light-bg); /* White text on active */
 }
 
 /* Main Chat Area */
@@ -91,65 +112,77 @@ body {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    padding-bottom: 100px; /* Space for the fixed input area */
-    position: relative; /* To contain the fixed input area */
+    padding-bottom: 100px;
+    position: relative;
+    color: var(--text-color-dark);
 }
 
 .chat-output {
     flex-grow: 1;
     overflow-y: auto;
     padding: 20px;
-    max-width: 800px; /* Center content */
+    max-width: 800px;
     margin: 0 auto;
     width: 100%;
-    /* Gradient for the fade effect at the bottom, like ChatGPT */
+    /* Gradient for the fade effect at the bottom */
     mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
 }
 
 .message {
     padding: 20px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    /* Use a light dividing line */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     line-height: 1.6;
 }
 
+/* Differentiate messages */
 .system-message {
-    background-color: var(--dark-bg);
+    /* Bot messages stand out slightly from the white background */
+    background-color: #FAFAFA;
 }
+
+.user-message {
+    /* User messages blend into the white background */
+    background-color: transparent;
+}
+
 
 /* Input Area */
 .input-area-container {
     position: fixed;
     bottom: 0;
-    left: 260px; /* Aligned with the start of the chat-main area */
+    left: 260px;
     right: 0;
     padding: 20px;
-    background-color: var(--dark-bg); /* Use main dark color for the area below the chat */
+    /* White background for the area below the chat */
+    background-color: var(--light-bg);
     display: flex;
     flex-direction: column;
     align-items: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid #E0E0E0; /* Light border */
 }
 
 .input-area {
     width: 100%;
-    max-width: 768px; /* Slightly wider than the chat content */
+    max-width: 768px;
     display: flex;
     align-items: flex-end;
-    background-color: var(--input-bg);
+    background-color: var(--input-bg); /* Lighter gray for the box */
+    border: 1px solid var(--secondary-color); /* Light red border */
     border-radius: 10px;
     padding: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
 #user-input {
     flex-grow: 1;
     border: none;
     background: transparent;
-    color: var(--text-color);
+    color: var(--text-color-dark);
     padding: 5px 10px;
     font-size: 16px;
-    resize: none; /* Disable manual resizing */
-    max-height: 200px; /* Limit input box growth */
+    resize: none;
+    max-height: 200px;
     overflow-y: auto;
 }
 
@@ -158,7 +191,7 @@ body {
 }
 
 .send-btn {
-    background: var(--send-btn-color);
+    background: var(--primary-color); /* Main Red */
     color: white;
     border: none;
     padding: 8px;
@@ -174,15 +207,16 @@ body {
 .send-btn svg {
     width: 20px;
     height: 20px;
-    transform: rotate(90deg); /* Rotate for a send-message icon look */
+    stroke: white; /* Ensure the arrow is white */
+    transform: rotate(90deg);
 }
 
 .send-btn:hover {
-    background-color: #5d6ed4;
+    background-color: #B71C1C; /* Darker Red on hover */
 }
 
 .disclaimer {
     font-size: 12px;
-    color: rgba(209, 213, 219, 0.5);
+    color: rgba(51, 51, 51, 0.5); /* Dark gray, slightly transparent */
     margin-top: 10px;
 }
