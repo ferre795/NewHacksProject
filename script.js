@@ -1,6 +1,7 @@
-// script.js (REWORKED)
+// script.js (UPDATED for Streaming)
 
 document.addEventListener('DOMContentLoaded', () => {
+    // ... (All variable declarations remain the same) ...
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
     const chatOutput = document.getElementById('chat-output');
@@ -8,10 +9,55 @@ document.addEventListener('DOMContentLoaded', () => {
     const newChatBtn = document.querySelector('.new-chat-btn');
 
     let currentSessionId = null;
-    let chatData = {}; // Stores {sessionId: [{text, sender}, ...]}
+    let chatData = {}; 
+    
+    // Global variable to store the element being streamed to
+    let currentBotMessageElement = null;
 
-    // --- Helper Functions ---
+    // --- LocalStorage Functions (Remain the same) ---
 
+    // ... (loadChatsFromStorage, saveChatsToStorage, addMessage, saveMessageToSession, renderChat, createHistoryItem, startAIBrainSession remain the same) ...
+
+    function loadChatsFromStorage() {
+        const storedData = localStorage.getItem('chatApp_chatData');
+        const storedSessionId = localStorage.getItem('chatApp_currentSessionId');
+
+        if (storedData) {
+            try {
+                chatData = JSON.parse(storedData);
+                console.log("Loaded chat data from localStorage.");
+                
+                if (Object.keys(chatData).length > 0) {
+                    Object.keys(chatData).reverse().forEach(sessionId => {
+                        const firstUserMessage = chatData[sessionId].find(msg => msg.sender === 'user');
+                        const title = firstUserMessage ? 
+                                      firstUserMessage.text.substring(0, 20) + (firstUserMessage.text.length > 20 ? '...' : '') : 
+                                      `New Chat - ${sessionId.substring(0, 8)}`;
+                        createHistoryItem(sessionId, title);
+                    });
+                    
+                    const initialSessionId = storedSessionId && chatData[storedSessionId] ? storedSessionId : Object.keys(chatData)[0];
+                    if (initialSessionId) {
+                        // The server-side context is reset, but we load the UI history
+                        renderChat(initialSessionId);
+                    }
+                }
+                return true; 
+            } catch (e) {
+                console.error("Error parsing chat data from localStorage.", e);
+                localStorage.removeItem('chatApp_chatData');
+            }
+        }
+        return false;
+    }
+
+    function saveChatsToStorage() {
+        localStorage.setItem('chatApp_chatData', JSON.stringify(chatData));
+        if (currentSessionId) {
+            localStorage.setItem('chatApp_currentSessionId', currentSessionId);
+        }
+    }
+    
     function addMessage(text, sender, targetOutput = chatOutput) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
@@ -23,6 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         targetOutput.appendChild(messageDiv);
         targetOutput.scrollTop = targetOutput.scrollHeight;
+        
+        // Return the <p> element for streaming if it's a bot message
+        if (sender === 'bot' && text === '') {
+            return p;
+        }
     }
 
     function saveMessageToSession(sessionId, text, sender) {
@@ -30,13 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
             chatData[sessionId] = [];
         }
         chatData[sessionId].push({ text, sender });
+        saveChatsToStorage();
     }
 
     function renderChat(sessionId) {
-        // Clear current chat
         chatOutput.innerHTML = '';
         
-        // Highlight active session
         document.querySelectorAll('.history-item').forEach(item => {
             item.classList.remove('active');
             if (item.dataset.sessionId === sessionId) {
@@ -44,17 +94,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Load messages for the new session
         if (chatData[sessionId]) {
             chatData[sessionId].forEach(msg => {
                 addMessage(msg.text, msg.sender);
             });
         }
         
-        // Set the current session
         currentSessionId = sessionId;
+        saveChatsToStorage();
 
-        // Ensure input area is ready
         userInput.disabled = false;
         sendBtn.disabled = false;
         sendBtn.style.opacity = 1;
@@ -62,31 +110,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createHistoryItem(sessionId, title) {
-        // Remove 'active' from all others before creating a new one
         document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
 
         const li = document.createElement('li');
-        li.classList.add('history-item', 'active'); // New chat is active by default
+        li.classList.add('history-item', 'active');
         li.dataset.sessionId = sessionId;
         li.textContent = title;
         
-        // Click event to switch chats
-        li.addEventListener('click', () => renderChat(sessionId));
+        li.addEventListener('click', () => {
+            renderChat(sessionId);
+        });
 
         chatHistoryList.prepend(li);
         return li;
     }
+    
+    // Placeholder to keep the function signatures consistent
+    const startAIBrainSession = (sessionId) => { /* No server call needed here for this version */ };
 
-    // --- Core Logic ---
 
-    // 1. Start a New Chat Session - Endpoint: /api/new-session
+    // 1. Start a New Chat Session (No change)
     const startNewChat = async () => {
         try {
-            // Updated endpoint to /api/new-session
             const response = await fetch('/api/new-session');
             
             if (!response.ok) {
-                // If status is not 200-299, throw error with status
                 const errorText = await response.text();
                 throw new Error(`Server responded with status ${response.status}: ${errorText}`);
             }
@@ -95,21 +143,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const sessionId = data.sessionId;
             const defaultTitle = `New Chat - ${new Date().toLocaleTimeString()}`;
             
-            // Initialize storage and starting message
             const welcomeMessage = "Welcome! I'm ready for a new conversation. Ask me anything.";
             chatData[sessionId] = [{ text: welcomeMessage, sender: 'system' }];
             
-            // Update UI
             createHistoryItem(sessionId, defaultTitle);
             renderChat(sessionId);
+            saveChatsToStorage();
 
         } catch (error) {
             console.error('CRITICAL ERROR: Could not start a new chat session. Check your server console.', error);
-            alert(`Error starting new chat: ${error.message}. Is your Express server running on port ${window.location.port || 3000}?`);
+            alert(`Error starting new chat: ${error.message}.`);
         }
     };
 
-    // 2. Send Message Handler - Endpoint: /api/chat
+    // 2. Send Message Handler (UPDATED to handle streaming)
     const sendMessage = async () => {
         const userText = userInput.value.trim();
 
@@ -117,9 +164,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Add User Message and save
+        // Add User Message (saves to memory, but not yet to the permanent bot history)
         addMessage(userText, 'user');
         saveMessageToSession(currentSessionId, userText, 'user');
+
+        // Prepare Bot Message element (empty string)
+        currentBotMessageElement = addMessage('', 'bot');
+        let fullBotResponse = '';
 
         // Clear input and disable UI
         userInput.value = '';
@@ -132,36 +183,82 @@ document.addEventListener('DOMContentLoaded', () => {
         const historyItem = document.querySelector(`.history-item[data-session-id="${currentSessionId}"]`);
         if (historyItem && historyItem.textContent.startsWith('New Chat')) {
             historyItem.textContent = userText.substring(0, 20) + (userText.length > 20 ? '...' : '');
+            saveChatsToStorage();
         }
+        
+        const decoder = new TextDecoder('utf-8');
 
         try {
-            // Send message to the Express server with the session ID
-            const response = await fetch('/api/chat', { // Updated endpoint to /api/chat
+            const response = await fetch('/api/chat', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sessionId: currentSessionId, message: userText })
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Server error: Status ${response.status}`);
+                throw new Error(`Server streaming error: Status ${response.status}`);
             }
 
-            const data = await response.json();
-            
-            // Add Bot Response and save
-            addMessage(data.text, 'bot');
-            saveMessageToSession(currentSessionId, data.text, 'bot');
+            // Get the stream reader
+            const reader = response.body.getReader();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                // Decode the chunk (it might contain multiple SSE events)
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n\n').filter(line => line.trim() !== '');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const jsonStr = line.substring(6);
+                            const data = JSON.parse(jsonStr);
+                            
+                            if (data.text) {
+                                // Append the new text chunk to the element
+                                currentBotMessageElement.textContent += data.text;
+                                fullBotResponse += data.text;
+                                // Auto-scroll to keep the latest text visible
+                                chatOutput.scrollTop = chatOutput.scrollHeight;
+                            }
+                        } catch (e) {
+                            console.error('Error parsing SSE data:', e, line);
+                        }
+                    } else if (line.startsWith('event: done')) {
+                        // Stream finished, break the loop
+                        break;
+                    } else if (line.startsWith('event: error')) {
+                         // Handle server-side error event
+                         const errorData = JSON.parse(line.substring(6));
+                         currentBotMessageElement.textContent += `[ERROR: ${errorData.error}]`;
+                         fullBotResponse = 'ERROR: ' + errorData.error;
+                         break;
+                    }
+                }
+            }
+
+            // After streaming finishes, save the final, complete response to local history
+            if (fullBotResponse) {
+                // Remove the initial user message, then add the user and complete bot message
+                // This ensures the local memory holds the full exchange.
+                chatData[currentSessionId].pop(); // Remove the user message placeholder
+                saveMessageToSession(currentSessionId, userText, 'user');
+                saveMessageToSession(currentSessionId, fullBotResponse, 'bot');
+            }
 
         } catch (error) {
-            console.error('Error communicating with AI:', error);
-            addMessage(`🤖 Server Error: ${error.message}. Please check console.`, 'system');
+            console.error('Error during streaming chat:', error);
+            // Display error in the chat window
+            currentBotMessageElement.textContent = `🤖 Streaming failed: ${error.message}`;
         } finally {
             // Re-enable input
             userInput.disabled = false;
             sendBtn.disabled = false;
             sendBtn.style.opacity = 1;
             userInput.focus();
+            currentBotMessageElement = null;
         }
     };
 
@@ -181,7 +278,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // Start by clearing any placeholder and initializing the first chat
+    // Main App Init: Load from storage or start a new chat
     chatHistoryList.innerHTML = '';
-    startNewChat();
+    const chatsFound = loadChatsFromStorage();
+    if (!chatsFound) {
+        startNewChat();
+    }
 });

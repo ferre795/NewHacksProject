@@ -1,13 +1,13 @@
 :root {
-    /* --- WHITE & RED THEME VARIABLES --- */
-    --light-bg: #FFFFFF;        /* Main background color (White) */
-    --sidebar-bg: #F9F9F9;      /* Sidebar lighter background */
-    --text-color-dark: #333333; /* Dark text for contrast */
-    --input-bg: #F0F0F0;        /* Input area lighter background */
-    --active-item-bg: #FFEBEB;  /* Very light red for active/hover */
-    --primary-color: #D32F2F;   /* Main Red color (e.g., Send button) */
-    --secondary-color: #EF9A9A; /* Lighter Red */
-    /* ----------------------------------- */
+    /* --- DARK GREY & BLUE THEME VARIABLES --- */
+    --light-bg: #1E1E1E;        /* Main background (Dark Grey) */
+    --sidebar-bg: #2A2A2A;      /* Sidebar slightly lighter grey */
+    --text-color-dark: #E0E0E0; /* Light text for contrast */
+    --input-bg: #333333;        /* Input area background */
+    --active-item-bg: #2F3B52;  /* Muted dark blue for hover/active */
+    --primary-color: #1976D2;   /* Main Blue (buttons, highlights) */
+    --secondary-color: #64B5F6; /* Lighter Blue accent */
+    /* --------------------------------------- */
 }
 
 /* Reset and base styles */
@@ -19,8 +19,8 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--light-bg); /* Main background: White */
-    color: var(--text-color-dark); /* Main text color: Dark */
+    background-color: var(--light-bg);
+    color: var(--text-color-dark);
     display: flex;
     height: 100vh;
     overflow: hidden;
@@ -35,12 +35,11 @@ body {
 /* Left Sidebar */
 .sidebar {
     width: 260px;
-    /* Sidebar BG is nearly white, still slightly transparent */
-    background-color: rgba(249, 249, 249, 0.95);
+    background-color: rgba(42, 42, 42, 0.95); /* Slightly transparent dark grey */
     padding: 10px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #E0E0E0; /* Light gray border */
+    border-right: 1px solid #444; /* Subtle border */
     overflow-y: auto;
     flex-shrink: 0;
     color: var(--text-color-dark);
@@ -54,32 +53,27 @@ body {
     width: 100%;
     padding: 10px;
     background-color: transparent;
-    border: 1px solid var(--primary-color); /* Red border */
-    color: var(--primary-color); /* Red text */
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.2s;
-    
-    /* MODIFIED: Flexbox for centering */
     display: flex;
-    justify-content: center; /* Center horizontally */
+    justify-content: center;
     align-items: center;
 }
 
 .new-chat-btn:hover {
-    background-color: var(--active-item-bg); /* Light red on hover */
+    background-color: var(--active-item-bg);
+    color: var(--text-color-dark);
 }
 
-/* MODIFIED: Styling for the parts of the button */
 .plus-sign {
-    margin-right: 8px; /* Space between '+' and 'New Chat' */
-}
-.chat-text {
-    /* The 'New Chat' text is now centered relative to the button width */
+    margin-right: 8px;
 }
 
-
+/* Chat history */
 .history-list {
     list-style: none;
     padding: 0;
@@ -103,8 +97,8 @@ body {
 }
 
 .history-item.active {
-    background-color: var(--secondary-color); /* Lighter red for active */
-    color: var(--light-bg); /* White text on active */
+    background-color: var(--secondary-color);
+    color: #FFFFFF;
 }
 
 /* Main Chat Area */
@@ -124,28 +118,22 @@ body {
     max-width: 800px;
     margin: 0 auto;
     width: 100%;
-    /* Gradient for the fade effect at the bottom */
     mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
 }
 
 .message {
     padding: 20px 0;
-    /* Use a light dividing line */
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     line-height: 1.6;
 }
 
-/* Differentiate messages */
 .system-message {
-    /* Bot messages stand out slightly from the white background */
-    background-color: #FAFAFA;
+    background-color: #2A2A2A; /* Slightly lighter grey */
 }
 
 .user-message {
-    /* User messages blend into the white background */
     background-color: transparent;
 }
-
 
 /* Input Area */
 .input-area-container {
@@ -154,12 +142,11 @@ body {
     left: 260px;
     right: 0;
     padding: 20px;
-    /* White background for the area below the chat */
     background-color: var(--light-bg);
     display: flex;
     flex-direction: column;
     align-items: center;
-    border-top: 1px solid #E0E0E0; /* Light border */
+    border-top: 1px solid #444;
 }
 
 .input-area {
@@ -167,11 +154,11 @@ body {
     max-width: 768px;
     display: flex;
     align-items: flex-end;
-    background-color: var(--input-bg); /* Lighter gray for the box */
-    border: 1px solid var(--secondary-color); /* Light red border */
+    background-color: var(--input-bg);
+    border: 1px solid var(--secondary-color);
     border-radius: 10px;
     padding: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
 }
 
 #user-input {
@@ -191,7 +178,7 @@ body {
 }
 
 .send-btn {
-    background: var(--primary-color); /* Main Red */
+    background: var(--primary-color);
     color: white;
     border: none;
     padding: 8px;
@@ -207,16 +194,53 @@ body {
 .send-btn svg {
     width: 20px;
     height: 20px;
-    stroke: white; /* Ensure the arrow is white */
+    stroke: white;
     transform: rotate(90deg);
 }
 
 .send-btn:hover {
-    background-color: #B71C1C; /* Darker Red on hover */
+    background-color: #1565C0; /* Slightly darker blue */
 }
 
 .disclaimer {
     font-size: 12px;
-    color: rgba(51, 51, 51, 0.5); /* Dark gray, slightly transparent */
+    color: rgba(224, 224, 224, 0.5);
     margin-top: 10px;
+}
+/* ... existing CSS ... */
+
+/* Add space for the new footer at the bottom of the sidebar */
+.sidebar {
+    /* ... existing styles ... */
+    padding-bottom: 70px; /* Make space for the fixed footer */
+    position: relative;
+}
+
+.sidebar-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Assuming a dark theme for separation */
+    /* If you kept the white theme, change the border color */
+    border-top: 1px solid var(--active-item-bg); /* Use a light color for the white/red theme */
+    background-color: var(--sidebar-bg);
+}
+
+.remove-all-btn {
+    width: 100%;
+    padding: 8px;
+    background-color: transparent;
+    border: 1px solid var(--primary-color); /* Red border from your existing theme */
+    color: var(--primary-color);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.remove-all-btn:hover {
+    background-color: var(--secondary-color); /* Lighter red on hover */
+    color: white; /* White text on hover for contrast */
 }
