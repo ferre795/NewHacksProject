@@ -1,330 +1,338 @@
 :root {
-    /* --- DARK GREY & BLUE THEME VARIABLES --- */
-    --light-bg: #1E1E1E;        /* Main background (Dark Grey) */
-    --sidebar-bg: #2A2A2A;      /* Sidebar slightly lighter grey */
-    --text-color-dark: #E0E0E0; /* Light text for contrast */
-    --input-bg: #333333;        /* Input area background */
-    --active-item-bg: #2F3B52;  /* Muted dark blue for hover/active */
-    --primary-color: #1976D2;   /* Main Blue (buttons, highlights) */
-    --secondary-color: #64B5F6; /* Lighter Blue accent */
-    /* --------------------------------------- */
+  /* --- DARK GREY & BLUE THEME VARIABLES --- */
+  --light-bg: #1E1E1E;        /* Main background (Dark Grey) */
+  --sidebar-bg: #2A2A2A;      /* Sidebar slightly lighter grey */
+  --text-color-dark: #E0E0E0; /* Light text for contrast */
+  --input-bg: #333333;        /* Input area background */
+  --active-item-bg: #2F3B52;  /* Muted dark blue for hover/active */
+  --primary-color: #1976D2;   /* Main Blue (buttons, highlights) */
+  --secondary-color: #64B5F6; /* Lighter Blue accent */
+  /* --------------------------------------- */
 }
 
 /* Reset and base styles */
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--light-bg);
-    color: var(--text-color-dark);
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--light-bg);
+  color: var(--text-color-dark);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Overall Layout */
 .container {
-    display: flex;
-    width: 100%;
+  display: flex;
+  width: 100%;
 }
 
 /* Left Sidebar */
 .sidebar {
-    width: 260px;
-    background-color: rgba(42, 42, 42, 0.95); /* Slightly transparent dark grey */
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid #444; /* Subtle border */
-    overflow-y: auto;
-    flex-shrink: 0;
-    color: var(--text-color-dark);
+  width: 260px;
+  background-color: rgba(42, 42, 42, 0.95);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #444;
+  overflow-y: auto;
+  flex-shrink: 0;
+  color: var(--text-color-dark);
+
+  /* space for fixed footer */
+  padding-bottom: 70px;
+  position: relative;
 }
 
 .sidebar-header {
-    padding: 5px 0 15px;
+  padding: 5px 0 15px;
 }
 
 .new-chat-btn {
-    width: 100%;
-    padding: 10px;
-    background-color: transparent;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.2s;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .new-chat-btn:hover {
-    background-color: var(--active-item-bg);
-    color: var(--text-color-dark);
+  background-color: var(--active-item-bg);
+  color: var(--text-color-dark);
 }
 
 .plus-sign {
-    margin-right: 8px;
+  margin-right: 8px;
 }
 
 /* Chat history */
 .history-list {
-    list-style: none;
-    padding: 0;
-    margin-top: 10px;
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
 }
 
 .history-item {
-    padding: 10px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: background-color 0.2s;
-    color: var(--text-color-dark);
+  padding: 10px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: var(--text-color-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
 }
 
 .history-item:hover {
-    background-color: var(--active-item-bg);
+  background-color: var(--active-item-bg);
 }
 
 .history-item.active {
-    background-color: var(--secondary-color);
-    color: #FFFFFF;
+  background-color: var(--secondary-color);
+  color: #FFFFFF;
+}
+
+/* title + delete button */
+.history-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 15px;
+}
+
+.delete-chat-btn {
+  color: #E0E0E0;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.history-item:hover .delete-chat-btn {
+  opacity: 0.7;
+}
+
+.delete-chat-btn:hover {
+  opacity: 1;
+  color: #ff8a80;
 }
 
 /* Main Chat Area */
 .chat-main {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 100px;
-    position: relative;
-    color: var(--text-color-dark);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 100px;
+  position: relative;
+  color: var(--text-color-dark);
 }
 
 .chat-output {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 20px;
-    /* allow messages to use the full available chat area instead of being capped */
-    width: 100%;
-    max-width: none;
-    margin: 0;
-    /* keep the mask if you want the fade at the bottom */
-    mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+  display: flex;
+  flex-direction: column;
 }
 
+/* One row per message, no own background to avoid double bubbles */
 .message {
-    padding: 20px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    line-height: 1.6;
-    width: 100%;
-    box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 12px;
+  background: transparent;
+  line-height: 1.45;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* Target the <p> element inside messages which holds the content */
-.message p {
-    white-space: pre-wrap; /* Keeps formatting of multiple spaces, but breaks lines */
-    word-wrap: break-word;
-    width: 100%;
-    max-width: 100%;
-    display: block;
+/* The actual bubble */
+.message > p {
+  display: inline-block;             /* hug content */
+  width: fit-content;                /* size to content */
+  max-width: min(75%, 68ch);         /* readable cap for long text */
+  flex: 0 0 auto;                    /* don't grow/shrink */
+  box-sizing: border-box;
+
+  padding: 8px 12px;                 /* compact bubble */
+  border-radius: 14px;
+  margin: 0;
+
+  /* wrapping rules (fixes random breaks & textarea newlines) */
+  white-space: normal;               /* collapse newlines from textarea */
+  overflow-wrap: break-word;         /* break only when needed */
+  word-break: normal;
 }
 
-.system-message {
-    background-color: #2A2A2A; /* Slightly lighter grey */
+/* Alignment (no bubble color on the row itself) */
+.system-message { justify-content: flex-start; }
+.user-message   { justify-content: flex-end; }
+
+/* System/AI text: no bubble background */
+.system-message p {
+  background: transparent;
+  color: var(--text-color-dark);
+  padding: 0;                        /* truly "no bubble" look */
 }
 
-.user-message {
-    background-color: transparent;
+/* User bubble color */
+.user-message p {
+  background-color: var(--active-item-bg);
+  color: var(--text-color-dark);
+}
+
+/* Optional: if a message contains ONLY very short content (no spaces to wrap),
+   keep it on one line unless it would overflow the viewport.
+   This avoids “two words” splitting without breaking long paragraphs. */
+.message > p {
+  text-wrap: pretty;                 /* nicer wrapping (supported widely) */
 }
 
 /* Input Area */
 .input-area-container {
-    position: fixed;
-    bottom: 0;
-    left: 260px;
-    right: 0;
-    padding: 20px;
-    background-color: var(--light-bg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-top: 1px solid #444;
+  position: fixed;
+  bottom: 0;
+  left: 260px;
+  right: 0;
+  padding: 20px;
+  background-color: var(--light-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-top: 1px solid #444;
 }
 
 .input-area {
-    width: 100%;
-    max-width: 768px;
-    display: flex;
-    align-items: flex-end;
-    background-color: var(--input-bg);
-    border: 1px solid var(--secondary-color);
-    border-radius: 10px;
-    padding: 10px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  width: 100%;
+  max-width: 768px;
+  display: flex;
+  align-items: flex-end;
+  background-color: var(--input-bg);
+  border: 1px solid var(--secondary-color);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
 }
 
 #user-input {
-    flex-grow: 1;
-    border: none;
-    background: transparent;
-    color: var(--text-color-dark);
-    padding: 5px 10px;
-    font-size: 16px;
-    resize: none;
-    max-height: 200px;
-    overflow-y: auto;
+  flex-grow: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-color-dark);
+  padding: 5px 10px;
+  font-size: 16px;
+  resize: none;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 #user-input:focus {
-    outline: none;
+  outline: none;
 }
 
 .send-btn {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 8px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-left: 10px;
-    transition: background-color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .send-btn svg {
-    width: 20px;
-    height: 20px;
-    stroke: white;
-    transform: rotate(90deg);
+  width: 20px;
+  height: 20px;
+  stroke: white;
+  transform: rotate(90deg);
 }
 
 .send-btn:hover {
-    background-color: #1565C0; /* Slightly darker blue */
+  background-color: #1565C0;
 }
 
 .disclaimer {
-    font-size: 12px;
-    color: rgba(224, 224, 224, 0.5);
-    margin-top: 10px;
-}
-/* ... existing CSS ... */
-
-/* Add space for the new footer at the bottom of the sidebar */
-.sidebar {
-    /* ... existing styles ... */
-    padding-bottom: 70px; /* Make space for the fixed footer */
-    position: relative;
+  font-size: 12px;
+  color: rgba(224, 224, 224, 0.5);
+  margin-top: 10px;
 }
 
+/* Sidebar footer */
 .sidebar-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Assuming a dark theme for separation */
-    /* If you kept the white theme, change the border color */
-    border-top: 1px solid var(--active-item-bg); /* Use a light color for the white/red theme */
-    background-color: var(--sidebar-bg);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  border-top: 1px solid var(--active-item-bg);
+  background-color: var(--sidebar-bg);
 }
 
 .remove-all-btn {
-    width: 100%;
-    padding: 8px;
-    background-color: transparent;
-    border: 1px solid var(--primary-color); /* Red border from your existing theme */
-    color: var(--primary-color);
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
+  width: 100%;
+  padding: 8px;
+  background-color: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
 }
 
 .remove-all-btn:hover {
-    background-color: var(--secondary-color); /* Lighter red on hover */
-    color: white; /* White text on hover for contrast */
+  background-color: var(--secondary-color);
+  color: white;
 }
 
-/* style.css (Add these styles for code block formatting) */
-
-/* Target the <p> element inside messages which holds the content */
-.message p {
-    white-space: pre-wrap; /* Keeps formatting of multiple spaces, but breaks lines */
-    word-wrap: break-word;
-}
-
-/* Style for inline code (e.g., `word`) */
+/* Code styling inside messages */
 .message code {
-    background-color: var(--input-bg); /* Use a dark background */
-    color: var(--text-color-dark);
-    padding: 2px 4px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    font-family: monospace;
+  background-color: var(--input-bg);
+  color: var(--text-color-dark);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: monospace;
 }
 
-/* Style for block code (e.g., ```javascript ... ```) */
 .message pre {
-    background-color: #000000; /* Pure black background for code blocks */
-    color: #f8f8f2; /* Light color for code text */
-    padding: 10px;
-    border-radius: 6px;
-    overflow-x: auto; /* Allows horizontal scrolling for long lines */
-    margin-top: 10px;
+  background-color: #000000;
+  color: #f8f8f2;
+  padding: 10px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .message pre code {
-    /* Reset inline code styles for block code */
-    background: none;
-    padding: 0;
-    font-size: 1em;
-}
-
-.history-item {
-    /* Make the list item a flex container to align title and button */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative; /* Needed for positioning if you chose absolute positioning */
-}
-
-/* Add a span to wrap the text, allowing ellipsis to work with the button */
-.history-item-title {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding-right: 15px; /* Space for the delete button */
-}
-
-.delete-chat-btn {
-    color: #E0E0E0;
-    cursor: pointer;
-    font-weight: bold;
-    padding: 2px 5px;
-    border-radius: 3px;
-    opacity: 0; /* Hide by default */
-    transition: opacity 0.2s, color 0.2s;
-}
-
-/* Show the delete button when hovering over the parent history item */
-.history-item:hover .delete-chat-btn {
-    opacity: 0.7;
-}
-
-.delete-chat-btn:hover {
-    opacity: 1;
-    color: #ff8a80; /* A light red to indicate deletion */
+  background: none;
+  padding: 0;
+  font-size: 1em;
 }
