@@ -2,12 +2,56 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Utility Function for Delay ---
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     const TYPE_DELAY_MS = 25; 
+    const NOTIFICATION_DELAY_MS = 5000; // 5 seconds delay for notification
 
     // --- Utility Function for Markdown Rendering ---
     function renderMarkdown(text) {
+        // Assuming 'marked' is loaded globally
         return marked.parse(text);
     }
 
+    // --- NEW: Notification Handlers ---
+
+    /**
+     * Requests notification permission from the user.
+     * @returns {Promise<string>} 'granted', 'denied', or 'default'.
+     */
+    function requestNotificationPermission() {
+        if (!('Notification' in window)) {
+            console.warn("This browser does not support desktop notification.");
+            return Promise.resolve('denied');
+        }
+
+        if (Notification.permission === 'granted' || Notification.permission === 'denied') {
+            return Promise.resolve(Notification.permission);
+        }
+
+        return Notification.requestPermission();
+    }
+
+    /**
+     * Shows a desktop notification for a new bot message.
+     * @param {string} title The title of the notification.
+     * @param {string} body The body content of the notification.
+     */
+    function showBotNotification(title, body) {
+        // Only show if permission is granted AND the document is hidden (user is on another tab)
+        if (Notification.permission === 'granted' && document.hidden) {
+            const notification = new Notification(title, {
+                body: body,
+                icon: 'path/to/your/app/icon.png', // Update this path
+                vibrate: [200, 100, 200]
+            });
+            
+            notification.onclick = () => {
+                window.focus(); // Bring the chat window to the foreground
+            };
+            
+            // Auto-close after 10 seconds
+            setTimeout(() => notification.close(), 10000); 
+        }
+    }
+    
     // --- Variable Declarations ---
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
@@ -20,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let chatData = {}; 
     let currentBotMessageElement = null;
 
-    // --- Core Functions ---
+    // --- Core Functions (Loading/Saving/UI) ---
     function loadChatsFromStorage() {
         const storedData = localStorage.getItem('chatApp_chatData');
         const storedSessionId = localStorage.getItem('chatApp_currentSessionId');
@@ -225,6 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startNewChat();
     };
 
+    // --- Core Function: sendMessage (UPDATED) ---
     const sendMessage = async () => {
         const userText = userInput.value.trim();
         if (!userText || !currentSessionId) return;
@@ -288,6 +333,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentBotMessageElement.innerHTML = renderMarkdown(fullBotResponse);
                 chatOutput.scrollTop = chatOutput.scrollHeight;
                 saveMessageToSession(currentSessionId, fullBotResponse, 'bot');
+                
+                // --- NEW/UPDATED: Send Notification with 5-second delay ---
+                const notificationTitle = `New Message from Gemini`;
+                // Strip Markdown/HTML for a clean notification body
+                const notificationBody = fullBotResponse.replace(/<[^>]*>?/gm, '').substring(0, 100) + (fullBotResponse.length > 100 ? '...' : ''); 
+                
+                // Delay the notification
+                setTimeout(() => {
+                    showBotNotification(notificationTitle, notificationBody);
+                }, NOTIFICATION_DELAY_MS);
             }
 
         } catch (error) {
@@ -325,4 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!chatsFound) {
         startNewChat();
     }
+    
+    // Request notification permission on load
+    requestNotificationPermission();
 });

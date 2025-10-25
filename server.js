@@ -72,15 +72,12 @@ app.post('/api/chat', async (req, res) => {
 
         const stream = await chat.sendMessageStream({ message });
         
-        let fullResponse = '';
-
         // Loop over the stream chunks and send them as SSE 'data' events
         for await (const chunk of stream) {
             const chunkText = chunk.text;
             if (chunkText) {
                 // Send data chunk
                 res.write(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
-                fullResponse += chunkText;
             }
         }
         
@@ -89,7 +86,7 @@ app.post('/api/chat', async (req, res) => {
         res.write('data: {}\n\n');
         res.end();
 
-        console.log(`[SERVER:Session ${sessionId}] Stream finished. Full response saved to history.`);
+        console.log(`[SERVER:Session ${sessionId}] Stream finished.`);
 
     } catch (error) {
         console.error(`[SERVER:Session ${sessionId}] Gemini Streaming Error:`, error);
