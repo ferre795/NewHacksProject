@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface Clone</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn">+ New Chat</button>
+            </div>
+            <ul id="chat-history" class="history-list">
+                <li class="history-item active">Today's Chat 1</li>
+                <li class="history-item">Yesterday's Chat</li>
+                <li class="history-item">Project Brainstorm</li>
+            </ul>
+        </aside>
+
+        <main class="chat-main">
+            <div id="chat-output" class="chat-output">
+                <div class="message system-message">
+                    <p>Welcome! Ask me anything.</p>
+                </div>
+            </div>
+
+            <div class="input-area-container">
+                <div class="input-area">
+                    <textarea id="user-input" placeholder="Message Chat Interface Clone..." rows="1"></textarea>
+                    <button id="send-btn" class="send-btn">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M7 11L12 6L17 11M12 18V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="disclaimer">
+                    This is a visual clone for practice.
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
