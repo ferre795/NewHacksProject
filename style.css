@@ -7,7 +7,12 @@
   --active-item-bg: #2F3B52;  /* Muted dark blue for hover/active */
   --primary-color: #1976D2;   /* Main Blue (buttons, highlights) */
   --secondary-color: #64B5F6; /* Lighter Blue accent */
-  /* --------------------------------------- */
+  
+  /* Message styling */
+  --message-font-size: 18px;
+  --chat-width: 68ch;
+  --row-gap: 16px;
+  --pair-gap: 28px;
 }
 
 /* Reset and base styles */
@@ -43,8 +48,6 @@ body {
   overflow-y: auto;
   flex-shrink: 0;
   color: var(--text-color-dark);
-
-  /* space for fixed footer */
   padding-bottom: 70px;
   position: relative;
 }
@@ -155,58 +158,56 @@ body {
   flex-direction: column;
 }
 
-/* One row per message, no own background to avoid double bubbles */
+/* One row per message, constrained to a centered column */
 .message {
   display: flex;
   align-items: flex-start;
   gap: 0;
-  margin-bottom: 12px;
+  margin: 0 auto var(--row-gap);
   background: transparent;
   line-height: 1.45;
   width: 100%;
+  max-width: var(--chat-width);
   box-sizing: border-box;
 }
 
 /* The actual bubble */
 .message > p {
-  display: inline-block;             /* hug content */
-  width: fit-content;                /* size to content */
-  max-width: min(75%, 68ch);         /* readable cap for long text */
-  flex: 0 0 auto;                    /* don't grow/shrink */
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  flex: 0 0 auto;
   box-sizing: border-box;
-
-  padding: 8px 12px;                 /* compact bubble */
+  font-size: var(--message-font-size);
+  padding: 8px 12px;
   border-radius: 14px;
   margin: 0;
-
-  /* wrapping rules (fixes random breaks & textarea newlines) */
-  white-space: normal;               /* collapse newlines from textarea */
-  overflow-wrap: break-word;         /* break only when needed */
+  white-space: normal;
+  overflow-wrap: break-word;
   word-break: normal;
+  text-wrap: pretty;
 }
 
-/* Alignment (no bubble color on the row itself) */
-.system-message { justify-content: flex-start; }
-.user-message   { justify-content: flex-end; }
+/* Alignment inside the centered column */
+.system-message { justify-content: center; }
+.user-message   { justify-content: center; }
 
 /* System/AI text: no bubble background */
 .system-message p {
   background: transparent;
   color: var(--text-color-dark);
-  padding: 0;                        /* truly "no bubble" look */
+  padding: 0;
+  text-align: justify;
+  text-justify: inter-word;
+  text-align-last: center;
+  hyphens: auto;
+  text-wrap: balance;
 }
 
 /* User bubble color */
 .user-message p {
   background-color: var(--active-item-bg);
   color: var(--text-color-dark);
-}
-
-/* Optional: if a message contains ONLY very short content (no spaces to wrap),
-   keep it on one line unless it would overflow the viewport.
-   This avoids “two words” splitting without breaking long paragraphs. */
-.message > p {
-  text-wrap: pretty;                 /* nicer wrapping (supported widely) */
 }
 
 /* Input Area */

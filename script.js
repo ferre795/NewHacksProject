@@ -1,14 +1,10 @@
-// script.js (UPDATED with Individual Chat Deletion)
-
 document.addEventListener('DOMContentLoaded', () => {
     // --- Utility Function for Delay ---
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     const TYPE_DELAY_MS = 25; 
 
     // --- Utility Function for Markdown Rendering ---
-    // Uses the 'marked' library (must be included in index.html)
     function renderMarkdown(text) {
-        // Use the marked.js function to convert Markdown text to HTML
         return marked.parse(text);
     }
 
@@ -18,18 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatOutput = document.getElementById('chat-output');
     const chatHistoryList = document.getElementById('chat-history');
     const newChatBtn = document.querySelector('.new-chat-btn');
-    const removeAllChatsBtn = document.getElementById('remove-all-chats-btn'); 
+    const removeAllChatsBtn = document.getElementById('remove-all-chats-btn');
 
     let currentSessionId = null;
     let chatData = {}; 
-    let currentBotMessageElement = null; // Used for streaming
-
+    let currentBotMessageElement = null;
 
     // --- Core Functions ---
-    // ... loadChatsFromStorage, saveChatsToStorage, addMessage, saveMessageToSession (remain the same) ...
-
     function loadChatsFromStorage() {
-        // ... (implementation remains the same) ...
         const storedData = localStorage.getItem('chatApp_chatData');
         const storedSessionId = localStorage.getItem('chatApp_currentSessionId');
 
@@ -39,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Loaded chat data from localStorage.");
                 
                 if (Object.keys(chatData).length > 0) {
-                    // Render history items from newest to oldest
                     Object.keys(chatData).reverse().forEach(sessionId => {
                         const firstUserMessage = chatData[sessionId].find(msg => msg.sender === 'user');
                         const title = firstUserMessage ? 
@@ -53,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         renderChat(initialSessionId);
                     }
                 } else {
-                    return false; // No chats found
+                    return false;
                 }
                 return true; 
             } catch (e) {
@@ -97,44 +88,36 @@ document.addEventListener('DOMContentLoaded', () => {
         saveChatsToStorage();
     }
     
-    // NEW: Function to handle deleting a single chat
     function deleteChat(sessionIdToDelete) {
         if (!confirm("Are you sure you want to delete this chat?")) {
             return;
         }
 
-        // Remove from data object
         delete chatData[sessionIdToDelete];
 
-        // Remove from UI
         const historyItem = document.querySelector(`.history-item[data-session-id="${sessionIdToDelete}"]`);
         if (historyItem) {
             historyItem.remove();
         }
 
-        // If the deleted chat was the active one, select a new one or start fresh
         if (currentSessionId === sessionIdToDelete) {
             currentSessionId = null;
             chatOutput.innerHTML = '';
             
             const remainingSessions = Object.keys(chatData);
             if (remainingSessions.length > 0) {
-                // Render the most recent remaining chat
                 renderChat(remainingSessions[remainingSessions.length - 1]);
             } else {
-                // If no chats are left, start a new one
                 startNewChat();
             }
         }
         
-        saveChatsToStorage(); // Update localStorage
+        saveChatsToStorage();
     }
 
     function renderChat(sessionId) {
-        // Safety check in case the session was deleted
         if (!chatData[sessionId]) {
             console.warn(`Attempted to render a non-existent session: ${sessionId}`);
-            // Find the first available chat and render it instead
             const firstAvailableSession = Object.keys(chatData)[0];
             if (firstAvailableSession) {
                 renderChat(firstAvailableSession);
@@ -166,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.focus();
     }
 
-    // MODIFIED: Added delete button creation
     function createHistoryItem(sessionId, title) {
         const li = document.createElement('li');
         li.classList.add('history-item');
@@ -178,10 +160,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const deleteBtn = document.createElement('span');
         deleteBtn.classList.add('delete-chat-btn');
-        deleteBtn.innerHTML = '&#10005;'; // A simple 'x' character
+        deleteBtn.innerHTML = '&#10005;';
         
         deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent the li's click event from firing
+            e.stopPropagation();
             deleteChat(sessionId);
         });
 
@@ -189,13 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
         li.appendChild(deleteBtn);
         
         li.addEventListener('click', () => {
-             // Do not render if it's already active
             if (currentSessionId !== sessionId) {
                 renderChat(sessionId);
             }
         });
 
-        chatHistoryList.prepend(li); // Add new chats to the top
+        chatHistoryList.prepend(li);
         return li;
     }
     
@@ -262,11 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const historyItem = document.querySelector(`.history-item[data-session-id="${currentSessionId}"]`);
         const titleSpan = historyItem ? historyItem.querySelector('.history-item-title') : null;
-        // Update title only if it's the first user message
         if (titleSpan && titleSpan.textContent === 'New Chat') {
             const newTitle = userText.substring(0, 30) + (userText.length > 30 ? '...' : '');
             titleSpan.textContent = newTitle;
-            // No need to save to storage here, message saving already does it
         }
         
         const decoder = new TextDecoder('utf-8');
@@ -323,12 +302,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-
-    // --- Initialization & Event Listeners ---
-
+    // --- Event Listeners ---
     newChatBtn.addEventListener('click', startNewChat);
     sendBtn.addEventListener('click', sendMessage);
-    removeAllChatsBtn.addEventListener('click', handleRemoveAllChats); 
+    removeAllChatsBtn.addEventListener('click', handleRemoveAllChats);
 
     userInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -336,13 +313,13 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessage();
         }
     });
+    
     userInput.addEventListener('input', () => {
         userInput.style.height = 'auto'; 
         userInput.style.height = userInput.scrollHeight + 'px';
     });
 
-
-    // Main App Init: Load from storage or start a new chat
+    // Main App Init
     chatHistoryList.innerHTML = '';
     const chatsFound = loadChatsFromStorage();
     if (!chatsFound) {

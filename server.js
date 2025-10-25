@@ -1,5 +1,3 @@
-// server.js (UPDATED for Streaming)
-
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
@@ -25,7 +23,6 @@ const chatSessions = new Map();
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// ... (createNewChatSession and getChatSession helpers remain the same) ...
 function createNewChatSession() {
     const sessionId = uuidv4(); 
     const chat = ai.chats.create({ model });
@@ -38,7 +35,7 @@ function getChatSession(sessionId) {
     return chatSessions.get(sessionId);
 }
 
-// 1. Endpoint to create and return a new session ID (no change)
+// 1. Endpoint to create and return a new session ID
 app.get('/api/new-session', (req, res) => {
     try {
         const sessionId = createNewChatSession();
@@ -49,8 +46,7 @@ app.get('/api/new-session', (req, res) => {
     }
 });
 
-
-// 2. Chat API Endpoint (UPDATED to stream using SSE)
+// 2. Chat API Endpoint (Streaming using SSE)
 app.post('/api/chat', async (req, res) => {
     const { sessionId, message } = req.body;
 
@@ -64,23 +60,21 @@ app.post('/api/chat', async (req, res) => {
     }
 
     try {
-        // 1. Set headers for streaming (Server-Sent Events)
+        // Set headers for streaming (Server-Sent Events)
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no' // Important for preventing proxy buffering
+            'X-Accel-Buffering': 'no'
         });
         
         console.log(`[SERVER:Session ${sessionId}] Streaming response for user message: ${message}`);
 
-        // 2. Send user message to the chat object to update its history
-        // Note: The history update is done by the SDK behind the scenes before streaming the response.
         const stream = await chat.sendMessageStream({ message });
         
         let fullResponse = '';
 
-        // 3. Loop over the stream chunks and send them as SSE 'data' events
+        // Loop over the stream chunks and send them as SSE 'data' events
         for await (const chunk of stream) {
             const chunkText = chunk.text;
             if (chunkText) {
@@ -90,7 +84,7 @@ app.post('/api/chat', async (req, res) => {
             }
         }
         
-        // 4. Send a final 'done' event and close the connection
+        // Send a final 'done' event and close the connection
         res.write('event: done\n');
         res.write('data: {}\n\n');
         res.end();
