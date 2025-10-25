@@ -1,0 +1,188 @@
+:root {
+    --dark-bg: #343541; /* Main background color */
+    --sidebar-bg: #202123; /* Sidebar darker background */
+    --text-color: #d1d5db; /* Light gray text */
+    --input-bg: #40414f; /* Input area background */
+    --active-item: #3e4049; /* Active chat item/hover background */
+    --send-btn-color: #6c80f4; /* Blue color for send button */
+}
+
+/* Reset and base styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    display: flex;
+    height: 100vh;
+    overflow: hidden; /* Hide main body scrollbar */
+}
+
+/* Overall Layout */
+.container {
+    display: flex;
+    width: 100%;
+}
+
+/* Left Sidebar (Transparent effect) */
+.sidebar {
+    width: 260px;
+    background-color: rgba(32, 33, 35, 0.95); /* Sidebar BG with slight transparency */
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.sidebar-header {
+    padding: 5px 0 15px;
+}
+
+.new-chat-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: transparent;
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+}
+
+.new-chat-btn:hover {
+    background-color: var(--active-item);
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+.history-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background-color 0.2s;
+}
+
+.history-item:hover {
+    background-color: var(--active-item);
+}
+
+.history-item.active {
+    background-color: var(--active-item);
+}
+
+/* Main Chat Area */
+.chat-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 100px; /* Space for the fixed input area */
+    position: relative; /* To contain the fixed input area */
+}
+
+.chat-output {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    max-width: 800px; /* Center content */
+    margin: 0 auto;
+    width: 100%;
+    /* Gradient for the fade effect at the bottom, like ChatGPT */
+    mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+}
+
+.message {
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    line-height: 1.6;
+}
+
+.system-message {
+    background-color: var(--dark-bg);
+}
+
+/* Input Area */
+.input-area-container {
+    position: fixed;
+    bottom: 0;
+    left: 260px; /* Aligned with the start of the chat-main area */
+    right: 0;
+    padding: 20px;
+    background-color: var(--dark-bg); /* Use main dark color for the area below the chat */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.input-area {
+    width: 100%;
+    max-width: 768px; /* Slightly wider than the chat content */
+    display: flex;
+    align-items: flex-end;
+    background-color: var(--input-bg);
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#user-input {
+    flex-grow: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-color);
+    padding: 5px 10px;
+    font-size: 16px;
+    resize: none; /* Disable manual resizing */
+    max-height: 200px; /* Limit input box growth */
+    overflow-y: auto;
+}
+
+#user-input:focus {
+    outline: none;
+}
+
+.send-btn {
+    background: var(--send-btn-color);
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.send-btn svg {
+    width: 20px;
+    height: 20px;
+    transform: rotate(90deg); /* Rotate for a send-message icon look */
+}
+
+.send-btn:hover {
+    background-color: #5d6ed4;
+}
+
+.disclaimer {
+    font-size: 12px;
+    color: rgba(209, 213, 219, 0.5);
+    margin-top: 10px;
+}
