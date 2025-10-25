@@ -1,4 +1,4 @@
-// script.js (UPDATED with Typewriter Effect and Markdown Formatting)
+// script.js (UPDATED with Individual Chat Deletion)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Utility Function for Delay ---
@@ -26,8 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Core Functions ---
-    // ... loadChatsFromStorage, saveChatsToStorage, saveMessageToSession, 
-    // ... renderChat, createHistoryItem, startNewChat, handleRemoveAllChats (remain largely the same) ...
+    // ... loadChatsFromStorage, saveChatsToStorage, addMessage, saveMessageToSession (remain the same) ...
 
     function loadChatsFromStorage() {
         // ... (implementation remains the same) ...
@@ -40,10 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Loaded chat data from localStorage.");
                 
                 if (Object.keys(chatData).length > 0) {
+                    // Render history items from newest to oldest
                     Object.keys(chatData).reverse().forEach(sessionId => {
                         const firstUserMessage = chatData[sessionId].find(msg => msg.sender === 'user');
                         const title = firstUserMessage ? 
-                                      firstUserMessage.text.substring(0, 20) + (firstUserMessage.text.length > 20 ? '...' : '') : 
+                                      firstUserMessage.text.substring(0, 30) + (firstUserMessage.text.length > 30 ? '...' : '') : 
                                       `New Chat - ${sessionId.substring(0, 8)}`;
                         createHistoryItem(sessionId, title);
                     });
@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (initialSessionId) {
                         renderChat(initialSessionId);
                     }
+                } else {
+                    return false; // No chats found
                 }
                 return true; 
             } catch (e) {
@@ -66,28 +68,22 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('chatApp_chatData', JSON.stringify(chatData));
         if (currentSessionId) {
             localStorage.setItem('chatApp_currentSessionId', currentSessionId);
+        } else {
+            localStorage.removeItem('chatApp_currentSessionId');
         }
     }
     
-    // MODIFIED: Use innerHTML to render Markdown.
     function addMessage(text, sender, targetOutput = chatOutput) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
         messageDiv.classList.add(sender === 'user' ? 'user-message' : 'system-message');
         
         const p = document.createElement('p');
-
-        // *** FIX: Use innerHTML for Markdown rendering ***
         p.innerHTML = renderMarkdown(text);
-
         messageDiv.appendChild(p);
-
         targetOutput.appendChild(messageDiv);
         targetOutput.scrollTop = targetOutput.scrollHeight;
         
-        // Return the <p> element for streaming if it's a bot message
-        // NOTE: This initial element will be plain text, but we'll manually render 
-        // the full content to HTML in the 'finally' block of sendMessage.
         if (sender === 'bot' && text === '') {
             return p;
         }
@@ -100,8 +96,54 @@ document.addEventListener('DOMContentLoaded', () => {
         chatData[sessionId].push({ text, sender });
         saveChatsToStorage();
     }
+    
+    // NEW: Function to handle deleting a single chat
+    function deleteChat(sessionIdToDelete) {
+        if (!confirm("Are you sure you want to delete this chat?")) {
+            return;
+        }
+
+        // Remove from data object
+        delete chatData[sessionIdToDelete];
+
+        // Remove from UI
+        const historyItem = document.querySelector(`.history-item[data-session-id="${sessionIdToDelete}"]`);
+        if (historyItem) {
+            historyItem.remove();
+        }
+
+        // If the deleted chat was the active one, select a new one or start fresh
+        if (currentSessionId === sessionIdToDelete) {
+            currentSessionId = null;
+            chatOutput.innerHTML = '';
+            
+            const remainingSessions = Object.keys(chatData);
+            if (remainingSessions.length > 0) {
+                // Render the most recent remaining chat
+                renderChat(remainingSessions[remainingSessions.length - 1]);
+            } else {
+                // If no chats are left, start a new one
+                startNewChat();
+            }
+        }
+        
+        saveChatsToStorage(); // Update localStorage
+    }
 
     function renderChat(sessionId) {
+        // Safety check in case the session was deleted
+        if (!chatData[sessionId]) {
+            console.warn(`Attempted to render a non-existent session: ${sessionId}`);
+            // Find the first available chat and render it instead
+            const firstAvailableSession = Object.keys(chatData)[0];
+            if (firstAvailableSession) {
+                renderChat(firstAvailableSession);
+            } else {
+                startNewChat();
+            }
+            return;
+        }
+
         chatOutput.innerHTML = '';
         
         document.querySelectorAll('.history-item').forEach(item => {
@@ -111,11 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        if (chatData[sessionId]) {
-            chatData[sessionId].forEach(msg => {
-                addMessage(msg.text, msg.sender);
-            });
-        }
+        chatData[sessionId].forEach(msg => {
+            addMessage(msg.text, msg.sender);
+        });
         
         currentSessionId = sessionId;
         saveChatsToStorage();
@@ -126,19 +166,36 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.focus();
     }
 
+    // MODIFIED: Added delete button creation
     function createHistoryItem(sessionId, title) {
-        document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
-
         const li = document.createElement('li');
-        li.classList.add('history-item', 'active');
+        li.classList.add('history-item');
         li.dataset.sessionId = sessionId;
-        li.textContent = title;
         
-        li.addEventListener('click', () => {
-            renderChat(sessionId);
+        const titleSpan = document.createElement('span');
+        titleSpan.classList.add('history-item-title');
+        titleSpan.textContent = title;
+        
+        const deleteBtn = document.createElement('span');
+        deleteBtn.classList.add('delete-chat-btn');
+        deleteBtn.innerHTML = '&#10005;'; // A simple 'x' character
+        
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent the li's click event from firing
+            deleteChat(sessionId);
         });
 
-        chatHistoryList.prepend(li);
+        li.appendChild(titleSpan);
+        li.appendChild(deleteBtn);
+        
+        li.addEventListener('click', () => {
+             // Do not render if it's already active
+            if (currentSessionId !== sessionId) {
+                renderChat(sessionId);
+            }
+        });
+
+        chatHistoryList.prepend(li); // Add new chats to the top
         return li;
     }
     
@@ -153,10 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const data = await response.json();
             const sessionId = data.sessionId;
-            const defaultTitle = `New Chat - ${new Date().toLocaleTimeString()}`;
+            const defaultTitle = `New Chat`;
             
-            // NOTE: The welcome message should also be Markdown if you want formatting.
-            const welcomeMessage = "Welcome! I'm ready for a new conversation. Ask me *anything* and I will reply with **formatted** text.";
+            const welcomeMessage = "Welcome! I'm ready for a new conversation. Ask me *anything*.";
             chatData[sessionId] = [{ text: welcomeMessage, sender: 'system' }];
             
             document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
@@ -185,44 +241,32 @@ document.addEventListener('DOMContentLoaded', () => {
         chatHistoryList.innerHTML = '';
         chatOutput.innerHTML = '';
         
-        console.log("All chat history removed.");
-        alert("All chat history has been cleared.");
-
         startNewChat();
     };
 
-    // MODIFIED: Streaming Logic with Typewriter Effect and Markdown Finalization
     const sendMessage = async () => {
         const userText = userInput.value.trim();
+        if (!userText || !currentSessionId) return;
 
-        if (!userText || !currentSessionId) {
-            return;
-        }
-
-        // Add User Message (saves to UI and history)
         addMessage(userText, 'user');
         saveMessageToSession(currentSessionId, userText, 'user');
 
-        // Prepare Bot Message element (empty string) for UI streaming
-        // NOTE: currentBotMessageElement is the <p> element inside the message div
         currentBotMessageElement = addMessage('', 'bot');
-        
-        // To handle Markdown properly during streaming, we will stream the raw text 
-        // into a temporary element, then render it all to HTML once complete.
         let fullBotResponse = '';
 
-        // Clear input and disable UI
         userInput.value = '';
         userInput.style.height = 'auto';
         userInput.disabled = true;
         sendBtn.disabled = true;
         sendBtn.style.opacity = 0.5;
 
-        // Update History Item Title on first message
         const historyItem = document.querySelector(`.history-item[data-session-id="${currentSessionId}"]`);
-        if (historyItem && historyItem.textContent.startsWith('New Chat')) {
-            historyItem.textContent = userText.substring(0, 20) + (userText.length > 20 ? '...' : '');
-            saveChatsToStorage();
+        const titleSpan = historyItem ? historyItem.querySelector('.history-item-title') : null;
+        // Update title only if it's the first user message
+        if (titleSpan && titleSpan.textContent === 'New Chat') {
+            const newTitle = userText.substring(0, 30) + (userText.length > 30 ? '...' : '');
+            titleSpan.textContent = newTitle;
+            // No need to save to storage here, message saving already does it
         }
         
         const decoder = new TextDecoder('utf-8');
@@ -234,10 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ sessionId: currentSessionId, message: userText })
             });
 
-            if (!response.ok) {
-                throw new Error(`Server streaming error: Status ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`Server streaming error: Status ${response.status}`);
             const reader = response.body.getReader();
 
             while (true) {
@@ -250,39 +291,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         try {
-                            const jsonStr = line.substring(6);
-                            const data = JSON.parse(jsonStr);
-                            
+                            const data = JSON.parse(line.substring(6));
                             if (data.text) {
-                                // Typewriter Logic (append raw text)
                                 for (const char of data.text) {
-                                    // *** FIX: Append character to textContent for streaming smoothness ***
                                     currentBotMessageElement.textContent += char;
                                     fullBotResponse += char;
                                     chatOutput.scrollTop = chatOutput.scrollHeight;
                                     await delay(TYPE_DELAY_MS);
                                 }
                             }
-                        } catch (e) {
-                            console.error('Error parsing SSE data:', e, line);
-                        }
-                    } else if (line.startsWith('event: done')) {
-                        break;
-                    } else if (line.startsWith('event: error')) {
-                         const errorData = JSON.parse(line.substring(6));
-                         currentBotMessageElement.textContent += `[ERROR: ${errorData.error}]`;
-                         fullBotResponse = 'ERROR: ' + errorData.error;
-                         break;
-                    }
+                        } catch (e) { console.error('Error parsing SSE data:', e, line); }
+                    } else if (line.startsWith('event: done')) break;
                 }
             }
 
             if (fullBotResponse) {
-                // *** FIX: Render the final collected raw response as Markdown HTML ***
                 currentBotMessageElement.innerHTML = renderMarkdown(fullBotResponse);
-                chatOutput.scrollTop = chatOutput.scrollHeight; // Scroll one last time
-                
-                // Save the final, complete raw response (which contains Markdown) to local history
+                chatOutput.scrollTop = chatOutput.scrollHeight;
                 saveMessageToSession(currentSessionId, fullBotResponse, 'bot');
             }
 
@@ -290,7 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error during streaming chat:', error);
             currentBotMessageElement.textContent = `🤖 Streaming failed: ${error.message}`;
         } finally {
-            // Re-enable input
             userInput.disabled = false;
             sendBtn.disabled = false;
             sendBtn.style.opacity = 1;
