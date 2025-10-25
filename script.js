@@ -1,10 +1,16 @@
-// script.js (FIXED & CLEANED with Typewriter Effect)
+// script.js (UPDATED with Typewriter Effect and Markdown Formatting)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Utility Function for Delay ---
-    // A simple promise-based delay function for the typewriter effect
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    const TYPE_DELAY_MS = 25; // Speed for the typewriter effect (25ms per character)
+    const TYPE_DELAY_MS = 25; 
+
+    // --- Utility Function for Markdown Rendering ---
+    // Uses the 'marked' library (must be included in index.html)
+    function renderMarkdown(text) {
+        // Use the marked.js function to convert Markdown text to HTML
+        return marked.parse(text);
+    }
 
     // --- Variable Declarations ---
     const userInput = document.getElementById('user-input');
@@ -19,13 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentBotMessageElement = null; // Used for streaming
 
 
-    // --- Core Functions (Non-modified helper functions omitted for brevity) ---
-    // ... loadChatsFromStorage, saveChatsToStorage, addMessage, saveMessageToSession, 
-    // ... renderChat, createHistoryItem, startNewChat, handleRemoveAllChats (remain the same) ...
-    
-    // The previous implementation of these functions is assumed to be included here.
+    // --- Core Functions ---
+    // ... loadChatsFromStorage, saveChatsToStorage, saveMessageToSession, 
+    // ... renderChat, createHistoryItem, startNewChat, handleRemoveAllChats (remain largely the same) ...
 
     function loadChatsFromStorage() {
+        // ... (implementation remains the same) ...
         const storedData = localStorage.getItem('chatApp_chatData');
         const storedSessionId = localStorage.getItem('chatApp_currentSessionId');
 
@@ -64,18 +69,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // MODIFIED: Use innerHTML to render Markdown.
     function addMessage(text, sender, targetOutput = chatOutput) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
         messageDiv.classList.add(sender === 'user' ? 'user-message' : 'system-message');
         
         const p = document.createElement('p');
-        p.textContent = text;
+
+        // *** FIX: Use innerHTML for Markdown rendering ***
+        p.innerHTML = renderMarkdown(text);
+
         messageDiv.appendChild(p);
 
         targetOutput.appendChild(messageDiv);
         targetOutput.scrollTop = targetOutput.scrollHeight;
         
+        // Return the <p> element for streaming if it's a bot message
+        // NOTE: This initial element will be plain text, but we'll manually render 
+        // the full content to HTML in the 'finally' block of sendMessage.
         if (sender === 'bot' && text === '') {
             return p;
         }
@@ -129,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatHistoryList.prepend(li);
         return li;
     }
-
+    
     const startNewChat = async () => {
         try {
             const response = await fetch('/api/new-session');
@@ -143,7 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const sessionId = data.sessionId;
             const defaultTitle = `New Chat - ${new Date().toLocaleTimeString()}`;
             
-            const welcomeMessage = "Welcome! I'm ready for a new conversation. Ask me anything.";
+            // NOTE: The welcome message should also be Markdown if you want formatting.
+            const welcomeMessage = "Welcome! I'm ready for a new conversation. Ask me *anything* and I will reply with **formatted** text.";
             chatData[sessionId] = [{ text: welcomeMessage, sender: 'system' }];
             
             document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
@@ -177,8 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         startNewChat();
     };
-    
-    // 2. Send Message Handler (Streaming Logic with Typewriter Effect)
+
+    // MODIFIED: Streaming Logic with Typewriter Effect and Markdown Finalization
     const sendMessage = async () => {
         const userText = userInput.value.trim();
 
@@ -191,7 +204,11 @@ document.addEventListener('DOMContentLoaded', () => {
         saveMessageToSession(currentSessionId, userText, 'user');
 
         // Prepare Bot Message element (empty string) for UI streaming
+        // NOTE: currentBotMessageElement is the <p> element inside the message div
         currentBotMessageElement = addMessage('', 'bot');
+        
+        // To handle Markdown properly during streaming, we will stream the raw text 
+        // into a temporary element, then render it all to HTML once complete.
         let fullBotResponse = '';
 
         // Clear input and disable UI
@@ -221,14 +238,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Server streaming error: Status ${response.status}`);
             }
 
-            // Get the stream reader
             const reader = response.body.getReader();
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
-                // Decode the chunk (it might contain multiple SSE events)
                 const chunk = decoder.decode(value, { stream: true });
                 const lines = chunk.split('\n\n').filter(line => line.trim() !== '');
 
@@ -239,15 +254,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             const data = JSON.parse(jsonStr);
                             
                             if (data.text) {
-                                // --- NEW Typewriter Logic ---
+                                // Typewriter Logic (append raw text)
                                 for (const char of data.text) {
+                                    // *** FIX: Append character to textContent for streaming smoothness ***
                                     currentBotMessageElement.textContent += char;
                                     fullBotResponse += char;
-                                    // Auto-scroll on new character
                                     chatOutput.scrollTop = chatOutput.scrollHeight;
-                                    await delay(TYPE_DELAY_MS); // Pause for 25ms per character
+                                    await delay(TYPE_DELAY_MS);
                                 }
-                                // --- END NEW Logic ---
                             }
                         } catch (e) {
                             console.error('Error parsing SSE data:', e, line);
@@ -264,7 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (fullBotResponse) {
-                // Save the final, complete response to local history
+                // *** FIX: Render the final collected raw response as Markdown HTML ***
+                currentBotMessageElement.innerHTML = renderMarkdown(fullBotResponse);
+                chatOutput.scrollTop = chatOutput.scrollHeight; // Scroll one last time
+                
+                // Save the final, complete raw response (which contains Markdown) to local history
                 saveMessageToSession(currentSessionId, fullBotResponse, 'bot');
             }
 

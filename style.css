@@ -244,3 +244,38 @@ body {
     background-color: var(--secondary-color); /* Lighter red on hover */
     color: white; /* White text on hover for contrast */
 }
+
+/* style.css (Add these styles for code block formatting) */
+
+/* Target the <p> element inside messages which holds the content */
+.message p {
+    white-space: pre-wrap; /* Keeps formatting of multiple spaces, but breaks lines */
+    word-wrap: break-word;
+}
+
+/* Style for inline code (e.g., `word`) */
+.message code {
+    background-color: var(--input-bg); /* Use a dark background */
+    color: var(--text-color-dark);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: monospace;
+}
+
+/* Style for block code (e.g., ```javascript ... ```) */
+.message pre {
+    background-color: #000000; /* Pure black background for code blocks */
+    color: #f8f8f2; /* Light color for code text */
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto; /* Allows horizontal scrolling for long lines */
+    margin-top: 10px;
+}
+
+.message pre code {
+    /* Reset inline code styles for block code */
+    background: none;
+    padding: 0;
+    font-size: 1em;
+}
